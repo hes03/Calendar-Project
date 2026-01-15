@@ -1,22 +1,81 @@
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
+import listPlugin from "@fullcalendar/list";
+import interactionPlugin from "@fullcalendar/interaction"
+import { useState } from "react";
+import ScheduleModal from "../ScheduleModal";
 
 const Schedule = () => {
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>일정 관리</h2>
+  const [scheduleState, setScheduleState] = useState({
+    schedules: [],
+    selectedSchedule: null,
+    modal: { isOpen: false, mode: "create" },
+  });
 
+  const handleDateClick = (info) => {
+    setScheduleState((prev) => ({
+      ...prev,
+      selectedSchedule: {
+        title: "",
+        start: info.dateStr + "T09:00",
+        end: info.dateStr + "T10:00",
+        memo: "",
+        color: "#3b82f6",
+      },
+      modal: { isOpen: true, mode: "create" },
+    }));
+  };
+
+  const handleSave = (data) => {
+    setScheduleState((prev) => ({
+      ...prev,
+      schedules: [
+        ...prev.schedules,
+        { ...data, id: Date.now().toString() },
+      ],
+      modal: { isOpen: false, mode: "create" },
+    }));
+  };
+
+  const handleClose = () => {
+    setScheduleState((prev) => ({
+      ...prev,
+      modal: { isOpen: false, mode: "create" },
+    }));
+  };
+
+  const calendarEvents = scheduleState.schedules.map((s) => ({
+    id: s.id,
+    title: s.title,
+    start: s.start,
+    end: s.end,
+    backgroundColor: s.color,
+  }));
+
+
+  return (
+    <>
       <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         initialView="dayGridMonth"
         headerToolbar={{
           left: "prev,next today",
           center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
+          right: "dayGridMonth,timeGridWeek,listWeek",
         }}
+        dateClick={handleDateClick}
+        events={calendarEvents}
+        selectable={true} // 날짜 여러개 드래그 
       />
-    </div>
+      <ScheduleModal
+        show={scheduleState.modal.isOpen}
+        mode={scheduleState.modal.mode}
+        schedule={scheduleState.selectedSchedule}
+        onSave={handleSave}
+        onClose={handleClose}
+      />
+    </>
   );
 };
 
