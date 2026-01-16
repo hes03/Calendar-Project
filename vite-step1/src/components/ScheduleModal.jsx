@@ -10,12 +10,29 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
     color: "#3b82f6",
   });
 
-  // 수정 모드일 때 기존 데이터 세팅
-  useEffect(() => {
-    if (mode === "edit" && schedule) {
-      setForm(schedule);
-    }
-  }, [mode, schedule]);
+useEffect(() => {
+  // 생성 모드 → 항상 초기화
+  if (mode ==="create") {
+  setForm({
+    title:"",
+    start: schedule?.start ||"",
+    end: schedule?.end ||"",
+    memo:"",
+    color:"#3b82f6",
+    });
+  }
+
+  // 수정 모드 → 기존 데이터 세팅
+  if (mode ==="edit" && schedule) {
+  setForm({
+    title: schedule.title ||"",
+    start: schedule.start ||"",
+    end: schedule.end ||"",
+    memo: schedule.memo ||"",
+    color: schedule.color ||"#3b82f6",
+    });
+  }
+}, [mode, schedule]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -23,8 +40,15 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
   };
 
   const handleSubmit = () => {
+    if (new Date(form.end) <= new Date(form.start)) {
+      alert("종료 날짜/시간은 시작 이후여야 합니다.");
+      return;
+    }
     onSave(form);
   };
+
+  const isInvalidRange =
+    form.start && form.end && new Date(form.end) <= new Date(form.start);
 
   return (
     <Modal show={show} onHide={onClose}>
@@ -61,8 +85,14 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
               type="datetime-local"
               name="end"
               value={form.end}
+              min={form.start} /*시작 이전 선택 불가*/
               onChange={handleChange}
+              isInvalid={isInvalidRange} /*부트스트랩 유효성 검사. input테두리 빨간색으로 표시*/
             />
+            {/* isInvalid=true일 때만 화면에 표시되는 에러 메시지 */}
+            <Form.Control.Feedback type="invalid">
+              종료 날짜는 시작 이후여야 합니다.
+            </Form.Control.Feedback>
           </Form.Group>
 
           <Form.Group className="mb-2">
