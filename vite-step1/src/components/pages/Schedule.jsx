@@ -27,23 +27,59 @@ const Schedule = () => {
     }));
   };
 
-  const handleSave = (data) => {
+  const handleEventClick = (info) => {
+  const clickedSchedule = scheduleState.schedules.find(
+    (s) => s.id === info.event.id
+  );
+
     setScheduleState((prev) => ({
       ...prev,
-      schedules: [
-        ...prev.schedules,
-        { ...data, id: Date.now().toString() },
-      ],
-      modal: { isOpen: false, mode: "create" },
+      selectedSchedule: clickedSchedule,
+      modal: {
+        isOpen: true,
+        mode: "edit",
+      },
     }));
-    console.log(data)
   };
+
+  const handleSave = (data) => {
+  setScheduleState((prev) => {
+    const updatedSchedules =
+      prev.modal.mode === "create"
+        ? [
+            ...prev.schedules,
+            {
+              ...data,
+              id: Date.now().toString(),
+            },
+          ]
+        : prev.schedules.map((s) =>
+            s.id === data.id ? { ...data } : s
+          );
+
+    console.log("수정된 schedules", updatedSchedules);
+    console.log("저장 data", data);
+
+    return {
+      ...prev,
+      schedules: updatedSchedules,
+      modal: { isOpen: false, mode: "create" },
+      selectedSchedule: null,
+    };
+  });
+};
+
 
   const handleClose = () => {
     setScheduleState((prev) => ({
       ...prev,
-      modal: { isOpen: false, mode: "create" },
+      modal: {
+        isOpen: false,
+        mode: "create",
+      },
     }));
+    
+
   };
 
   const calendarEvents = scheduleState.schedules.map((s) => ({
@@ -67,6 +103,7 @@ const Schedule = () => {
         }}
         dateClick={handleDateClick}
         events={calendarEvents}
+        eventClick={handleEventClick}
         selectable={true} // 날짜 여러개 드래그 
         eventTimeFormat={{
           hour: "2-digit",

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
   const [form, setForm] = useState({
+    id: "",
     title: "",
     start: "",
     end: "",
@@ -14,6 +15,7 @@ useEffect(() => {
   // 생성 모드 → 항상 초기화
   if (mode ==="create") {
   setForm({
+    id:"",
     title:"",
     start: schedule?.start ||"",
     end: schedule?.end ||"",
@@ -25,6 +27,7 @@ useEffect(() => {
   // 수정 모드 → 기존 데이터 세팅
   if (mode ==="edit" && schedule) {
   setForm({
+    id: schedule.id ||"",
     title: schedule.title ||"",
     start: schedule.start ||"",
     end: schedule.end ||"",
@@ -123,11 +126,11 @@ useEffect(() => {
             삭제
           </Button>
         )}
-        <Button variant="secondary" onClick={onClose}>
-          취소
-        </Button>
         <Button variant="primary" onClick={handleSubmit}>
           저장
+        </Button>
+        <Button variant="secondary" onClick={onClose}>
+          취소
         </Button>
       </Modal.Footer>
     </Modal>
