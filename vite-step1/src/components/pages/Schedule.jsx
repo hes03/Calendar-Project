@@ -90,6 +90,19 @@ const Schedule = () => {
     backgroundColor: s.color,
   }));
 
+  // ✅ 일정 삭제 함수
+  const handleDelete = async (id) => {
+    if (!id) return;
+
+    setScheduleState((prev) => ({
+      ...prev,
+      schedules: prev.schedules.filter(
+        (schedule) => schedule.id !== id
+      ),
+      modal: { isOpen: false, mode: "create" },
+      selectedSchedule: null,
+    }));
+  };
 
   return (
     <>
@@ -118,6 +131,7 @@ const Schedule = () => {
         schedule={scheduleState.selectedSchedule}
         onSave={handleSave}
         onClose={handleClose}
+        onDelete={handleDelete}
       />
     </>
   );
