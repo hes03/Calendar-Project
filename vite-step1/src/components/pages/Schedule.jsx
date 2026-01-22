@@ -3,8 +3,9 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import interactionPlugin from "@fullcalendar/interaction"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ScheduleModal from "../ScheduleModal";
+import { createSchedule, getSchedules, updateSchedule, deleteSchedule } from "../../service/scheduleApi/scheduleService";
 
 const Schedule = () => {
   const [scheduleState, setScheduleState] = useState({
@@ -12,6 +13,19 @@ const Schedule = () => {
     selectedSchedule: null,
     modal: { isOpen: false, mode: "create" },
   });
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      const schedulesFromDB = await getSchedules();
+
+      setScheduleState((prev) => ({
+        ...prev,
+        schedules: schedulesFromDB,
+      }));
+    };
+
+    fetchSchedules();
+  }, []);
 
   const handleDateClick = (info) => {
     setScheduleState((prev) => ({
@@ -42,32 +56,34 @@ const Schedule = () => {
     }));
   };
 
-  const handleSave = (data) => {
-  setScheduleState((prev) => {
-    const updatedSchedules =
-      prev.modal.mode === "create"
-        ? [
-            ...prev.schedules,
-            {
-              ...data,
-              id: Date.now().toString(),
-            },
-          ]
-        : prev.schedules.map((s) =>
-            s.id === data.id ? { ...data } : s
-          );
+  const handleSave = async (data) => {
+    if (scheduleState.modal.mode === "create") {
+      const newSchedule = await createSchedule(data);
 
-    console.log("수정된 schedules", updatedSchedules);
-    console.log("저장 data", data);
+      setScheduleState((prev) => ({
+        ...prev,
+        schedules: [...prev.schedules, newSchedule],
+        modal: { isOpen: false, mode: "create" },
+        selectedSchedule: null,
+      }));
+      console.log("저장된 데이터: ", data);
+    } else {
+      // ✏️ edit
+      const updatedSchedule = await updateSchedule(data);
 
-    return {
-      ...prev,
-      schedules: updatedSchedules,
-      modal: { isOpen: false, mode: "create" },
-      selectedSchedule: null,
-    };
-  });
-};
+      setScheduleState((prev) => ({
+        ...prev,
+        schedules: prev.schedules.map((s) =>
+          s.id === updatedSchedule.id ? updatedSchedule : s
+        ),
+        modal: { isOpen: false, mode: "create" },
+        selectedSchedule: null,
+      }));
+      console.log("수정된 데이터: ", data);
+    }
+  };
+
+
 
 
   const handleClose = () => {
@@ -90,10 +106,13 @@ const Schedule = () => {
     backgroundColor: s.color,
   }));
 
-  // ✅ 일정 삭제 함수
   const handleDelete = async (id) => {
     if (!id) return;
 
+    // 🔥 Firestore 삭제
+    await deleteSchedule(id);
+
+    // 🔄 state 반영
     setScheduleState((prev) => ({
       ...prev,
       schedules: prev.schedules.filter(
@@ -103,6 +122,7 @@ const Schedule = () => {
       selectedSchedule: null,
     }));
   };
+
 
   return (
     <>
@@ -138,5 +158,4 @@ const Schedule = () => {
 };
 
 export default Schedule;
-
 

@@ -148,7 +148,9 @@ useEffect(() => {
           {mode === "edit" && (
             <Button
               variant="danger"
-              onClick={() => setShowDeleteConfirm(true)}
+              onClick={() => {
+                onClose(); //기존 일정 모달 닫기
+                setShowDeleteConfirm(true)}}
             >
               삭제
             </Button>
