@@ -6,8 +6,10 @@ import interactionPlugin from "@fullcalendar/interaction"
 import { useEffect, useState } from "react";
 import ScheduleModal from "../ScheduleModal";
 import { createSchedule, getSchedules, updateSchedule, deleteSchedule } from "../../service/scheduleApi/scheduleService";
+import "../styles/Schedule.css"
 
 const Schedule = () => {
+  
   const [scheduleState, setScheduleState] = useState({
     schedules: [],
     selectedSchedule: null,
@@ -126,25 +128,27 @@ const Schedule = () => {
 
   return (
     <>
-      <FullCalendar
-        plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,listWeek",
-        }}
-        dateClick={handleDateClick}
-        events={calendarEvents}
-        eventClick={handleEventClick}
-        selectable={true} // 날짜 여러개 드래그 
-        eventTimeFormat={{
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false
-        }}
-        
-      />
+    <div className="calendar-box" >
+        <FullCalendar
+          plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "dayGridMonth,timeGridWeek,listWeek",
+          }}
+          dateClick={handleDateClick}
+          events={calendarEvents}
+          eventClick={handleEventClick}
+          selectable={true} // 날짜 여러개 드래그 
+          eventTimeFormat={{
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          }}
+        />
+      
+      </div>
       <ScheduleModal
         show={scheduleState.modal.isOpen}
         mode={scheduleState.modal.mode}

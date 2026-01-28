@@ -17,7 +17,6 @@ const Header = () => {
           <Nav className='ms-lg-auto'>
             <Nav.Link href="/login">로그인</Nav.Link>
           </Nav>
-          
         </Navbar.Collapse>
       </Container>
     </Navbar>
