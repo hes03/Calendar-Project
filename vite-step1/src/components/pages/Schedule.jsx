@@ -47,7 +47,8 @@ const Schedule = () => {
   const clickedSchedule = scheduleState.schedules.find(
     (s) => s.id === info.event.id
   );
-
+    if (!clickedSchedule) return;
+    
     setScheduleState((prev) => ({
       ...prev,
       selectedSchedule: clickedSchedule,
@@ -68,7 +69,7 @@ const Schedule = () => {
         modal: { isOpen: false, mode: "create" },
         selectedSchedule: null,
       }));
-      console.log("저장된 데이터: ", data);
+      console.log("저장된 데이터: ", newSchedule);
     } else {
       // ✏️ edit
       const updatedSchedule = await updateSchedule(data);
@@ -81,7 +82,7 @@ const Schedule = () => {
         modal: { isOpen: false, mode: "create" },
         selectedSchedule: null,
       }));
-      console.log("수정된 데이터: ", data);
+      console.log("수정된 데이터: ", updatedSchedule);
     }
   };
 
