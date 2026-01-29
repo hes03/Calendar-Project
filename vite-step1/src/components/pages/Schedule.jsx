@@ -7,28 +7,44 @@ import { useEffect, useState } from "react";
 import ScheduleModal from "../ScheduleModal";
 import { createSchedule, getSchedules, updateSchedule, deleteSchedule } from "../../service/scheduleApi/scheduleService";
 import "../styles/Schedule.css"
+import { toast } from "react-toastify";
 
 const Schedule = () => {
-  
+  //일정 상태관리
   const [scheduleState, setScheduleState] = useState({
     schedules: [],
     selectedSchedule: null,
     modal: { isOpen: false, mode: "create" },
+    //state 확장
+    loading: true, //로딩중
+	  isSaving: false, //저장중
+	  error: null,
   });
-
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      const schedulesFromDB = await getSchedules();
-
-      setScheduleState((prev) => ({
-        ...prev,
-        schedules: schedulesFromDB,
-      }));
-    };
-
-    fetchSchedules();
-  }, []);
-
+	//일정 조회
+	useEffect(() => {
+	  const fetchSchedules = async () => {
+	    try {
+	      const schedulesFromDB = await getSchedules();
+	      setScheduleState((prev) => ({
+	        ...prev,
+	        schedules: Array.isArray(schedulesFromDB) ? schedulesFromDB : [],
+	        loading: false,
+	      })); //end of try
+	    } catch (err) {
+	      console.error(err);
+	      toast.error(err.message || "일정을 불러오지 못했습니다.");
+	      setScheduleState((prev) => ({
+	        ...prev,
+	        loading: false,
+	        error: err.message,
+	      }));
+	    }
+	  };
+	
+	  fetchSchedules();
+	}, []);//end of useEffect
+  
+  //날짜 클릭하면 일정 저장
   const handleDateClick = (info) => {
     setScheduleState((prev) => ({
       ...prev,
@@ -41,8 +57,9 @@ const Schedule = () => {
       },
       modal: { isOpen: true, mode: "create" },
     }));
-  };
+  };//end of handleDateClick
 
+  //일정 클릭하면 모달 수정창 열림
   const handleEventClick = (info) => {
   const clickedSchedule = scheduleState.schedules.find(
     (s) => s.id === info.event.id
@@ -57,9 +74,15 @@ const Schedule = () => {
         mode: "edit",
       },
     }));
-  };
+  };//end of handleEventClick
 
+  // 저장
   const handleSave = async (data) => {
+    if (scheduleState.isSaving) return;
+
+  setScheduleState((prev) => ({ ...prev, isSaving: true }));
+
+  try{
     if (scheduleState.modal.mode === "create") {
       const newSchedule = await createSchedule(data);
 
@@ -68,8 +91,10 @@ const Schedule = () => {
         schedules: [...prev.schedules, newSchedule],
         modal: { isOpen: false, mode: "create" },
         selectedSchedule: null,
+        isSaving: false,
       }));
       console.log("저장된 데이터: ", newSchedule);
+      toast.success("일정이 등록되었습니다.");
     } else {
       // ✏️ edit
       const updatedSchedule = await updateSchedule(data);
@@ -81,14 +106,24 @@ const Schedule = () => {
         ),
         modal: { isOpen: false, mode: "create" },
         selectedSchedule: null,
+        isSaving: false,
       }));
       console.log("수정된 데이터: ", updatedSchedule);
-    }
-  };
+      toast.success("일정이 수정되었습니다.");
+    }//end of if
+  }catch(err){
+    console.error(err);
 
+    toast.error(err.message || "저장 중 오류가 발생했습니다.");
 
+    setScheduleState((prev) => ({
+      ...prev,
+      isSaving: false,
+    }));
+  }
+  };//end of handleSave
 
-
+  //모달 닫기
   const handleClose = () => {
     setScheduleState((prev) => ({
       ...prev,
@@ -97,34 +132,37 @@ const Schedule = () => {
         mode: "create",
       },
     }));
-    
-
-  };
-
+  };//end of handleClose
+  //일정표시
   const calendarEvents = scheduleState.schedules.map((s) => ({
     id: s.id,
     title: s.title,
     start: s.start,
     end: s.end,
     backgroundColor: s.color,
-  }));
-
+  }));//end of calendarEvents
+  //일정 삭제
   const handleDelete = async (id) => {
     if (!id) return;
+    try{
+        // Firestore 삭제
+      await deleteSchedule(id);
 
-    // 🔥 Firestore 삭제
-    await deleteSchedule(id);
-
-    // 🔄 state 반영
-    setScheduleState((prev) => ({
-      ...prev,
-      schedules: prev.schedules.filter(
-        (schedule) => schedule.id !== id
-      ),
-      modal: { isOpen: false, mode: "create" },
-      selectedSchedule: null,
-    }));
-  };
+      // state 반영
+      setScheduleState((prev) => ({
+        ...prev,
+        schedules: prev.schedules.filter(
+          (schedule) => schedule.id !== id
+        ),
+        modal: { isOpen: false, mode: "create" },
+        selectedSchedule: null,
+      }));
+      toast.success("일정이 삭제되었습니다");
+    }catch(err){
+      console.error(err);
+      toast.error(err.message || "삭제에 실패했습니다.");
+    }
+  };//end of handleDelete
 
 
   return (

@@ -1,4 +1,4 @@
-import { Modal, Button, Form, Toast, ToastContainer } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import { useEffect, useState } from "react";
 
 const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
@@ -40,41 +40,36 @@ useEffect(() => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  };//end of handleChange
 
-  const [toastMessage, setToastMessage] = useState("");
-  const [showToast, setShowToast] = useState(false);
-
+  //저장
   const handleSubmit = async () => {
     if (new Date(form.end) <= new Date(form.start)) return;
-
-    await onSave(form);
-
-    setToastMessage(
-      mode === "create"
-        ? "일정이 등록되었습니다."
-        : "일정이 수정되었습니다."
-    );
-
-    onClose();
-    setShowToast(true);
-  };
+    try {
+      await onSave(form);
+      onClose();
+    } catch (error) {
+      console.error(error)
+    }
+  };//end  of handleSubmit
 
   const isInvalidRange =
     form.start && form.end && new Date(form.end) <= new Date(form.start);
-
+  //삭제확인 모달
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
+  
+  //삭제
   const handleDelete = async () => {
-    console.log("삭제할 ID: ", schedule.id)
-    await onDelete(schedule.id); // 일정 삭제
+    try {
+      console.log("삭제할 ID: ", schedule.id)
+      await onDelete(schedule.id); // 일정 삭제
 
-    setToastMessage("일정이 삭제되었습니다.");
-    setShowToast(true);
-
-    setShowDeleteConfirm(false); // 삭제 확인 모달 닫기
-    onClose(); // 일정 수정 모달 닫기
-  };
+      setShowDeleteConfirm(false); // 삭제 확인 모달 닫기
+      onClose(); // 일정 수정 모달 닫기
+    } catch (error) {
+      console.error(error)
+    }    
+  };//end of handleDelete
 
   return (
     <>
@@ -163,19 +158,6 @@ useEffect(() => {
           </Button>
         </Modal.Footer>
       </Modal>
-      <ToastContainer position="bottom-end" className="p-3">
-      <Toast
-        show={showToast}
-        onClose={() => setShowToast(false)}
-        delay={2000}
-        autohide
-        bg="success"
-      >
-        <Toast.Body className="text-white">
-          {toastMessage}
-        </Toast.Body>
-      </Toast>
-    </ToastContainer>
 
     {/* 삭제 확인 모달 */}
     <Modal

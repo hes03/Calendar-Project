@@ -3,3 +3,12 @@
   background: #fff;
   border-radius: 8px;
 }
+.Toastify__toast {
+  border-radius: 20px !important;
+  font-weight: 500 !important;
+}
+/* 성공 토스트 색상 변경 */
+.Toastify__toast--success {
+  background-color: #018888 !important; 
+  color: white;
+}

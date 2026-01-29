@@ -5,7 +5,24 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 5000, // ⏱️ 무한 대기 방지
 });
+
+// 공통 에러 처리
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "서버와 통신 중 오류가 발생했습니다.";
+
+    return Promise.reject({
+      status: error.response?.status,
+      message,
+    });
+  }
+);
 
 // 일정 등록
 export const createSchedule = async (schedule) => {
@@ -32,5 +49,8 @@ export const updateSchedule = async (schedule) => {
 
 // 일정 삭제
 export const deleteSchedule = async (id) => {
+  if (!id) {
+    throw { message: "삭제할 일정 ID가 없습니다." };
+  }
   await api.delete(`/${id}`);
 };

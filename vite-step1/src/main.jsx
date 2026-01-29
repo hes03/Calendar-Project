@@ -8,6 +8,9 @@ import Attend from './components/pages/Attend.jsx';
 import LoginPage from './components/auth/LoginPage.jsx';
 import JoinPage from './components/auth/JoinPage.jsx';
 import Footer from './components/include/Footer.jsx';
+import { Slide, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "./components/styles/Schedule.css"
 
 createRoot(document.getElementById('root')).render(
   <>
@@ -22,5 +25,15 @@ createRoot(document.getElementById('root')).render(
       </Routes>
       <Footer />
     </BrowserRouter>
+    <ToastContainer
+      position="bottom-right"
+      autoClose={1800}
+      hideProgressBar
+      closeButton={false}
+      pauseOnHover={false}
+      draggable={false}
+      theme="colored"
+      transition={Slide}
+      />
   </>,
 )
