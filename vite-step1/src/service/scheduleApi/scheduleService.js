@@ -5,7 +5,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 5000, // ⏱️ 무한 대기 방지
+  timeout: 5000,
 });
 
 // 공통 에러 처리
@@ -24,11 +24,9 @@ api.interceptors.response.use(
   }
 );
 
-// 일정 등록
+// 일정 생성
 export const createSchedule = async (schedule) => {
-  console.log("📤 프론트 → 서버", schedule);
   const res = await api.post("/", schedule);
-  console.log("📥 서버 응답", res.data);
   return res.data;
 };
 
@@ -38,19 +36,23 @@ export const getSchedules = async () => {
   return res.data;
 };
 
+// 일정 단건 조회
+export const getScheduleById = async (id) => {
+  if (!id) throw new Error("조회할 일정 ID가 없습니다.");
+  const res = await api.get(`/${id}`);
+  return res.data;
+};
+
 // 일정 수정
-export const updateSchedule = async (schedule) => {
-  if (!schedule.id) {
-    throw new Error("schedule.id가 없습니다");
-  }
-  const res = await api.put(`/${schedule.id}`, schedule);
+export const updateSchedule = async (id, data) => {
+  if (!id) throw new Error("수정할 일정 ID가 없습니다.");
+  const res = await api.put(`/${id}`, data);
   return res.data;
 };
 
 // 일정 삭제
 export const deleteSchedule = async (id) => {
-  if (!id) {
-    throw { message: "삭제할 일정 ID가 없습니다." };
-  }
-  await api.delete(`/${id}`);
+  if (!id) throw new Error("삭제할 일정 ID가 없습니다.");
+  const res = await api.delete(`/${id}`);
+  return res.data;
 };
