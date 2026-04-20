@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getAccessToken } from "../authApi/authService"; // 경로는 실제 위치에 맞게 수정
+import { getAccessToken } from "../authApi/authService";
 
 const API_BASE_URL = "http://localhost:3000/api/attendance";
 
@@ -36,6 +36,35 @@ export const checkOut = async () => {
   const response = await axios.post(
     `${API_BASE_URL}/check-out`,
     {},
+    { headers }
+  );
+  return response.data;
+};
+
+export const markEarlyLeave = async (note = "") => {
+  const headers = await getAuthHeaders();
+  const response = await axios.patch(
+    `${API_BASE_URL}/early-leave`,
+    { note },
+    { headers }
+  );
+  return response.data;
+};
+
+export const registerVacation = async ({ workDate, note = "" }) => {
+  const headers = await getAuthHeaders();
+  const response = await axios.post(
+    `${API_BASE_URL}/vacation`,
+    { workDate, note },
+    { headers }
+  );
+  return response.data;
+};
+
+export const getMonthlyAttendance = async (year, month) => {
+  const headers = await getAuthHeaders();
+  const response = await axios.get(
+    `${API_BASE_URL}/monthly?year=${year}&month=${month}`,
     { headers }
   );
   return response.data;

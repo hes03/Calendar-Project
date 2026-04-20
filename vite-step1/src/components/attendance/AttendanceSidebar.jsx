@@ -1,18 +1,22 @@
-import { FiActivity, FiCheckCircle, FiInfo } from "react-icons/fi";
 import {
-  getAttendanceStatusClassName,
+  formatTimeOnly,
+  formatWorkMinutes,
   getAttendanceStatusLabel,
+  getAttendanceTypeLabel,
 } from "../../utils/attendanceUtils";
-import AttendanceActionCard from "./AttendanceActionCard";
 
 function AttendanceSidebar({
   todayAttendance,
   onCheckIn,
   onCheckOut,
+  onEarlyLeave,
   actionLoading,
+  canCheckIn,
+  canCheckOut,
+  canEarlyLeave,
 }) {
   const record = todayAttendance?.record;
-  const hasRecord = todayAttendance?.hasRecord;
+  const hasRecord = !!todayAttendance?.hasRecord;
   const hasCheckOut = !!record?.checkOutAt;
 
   const statusLabel = getAttendanceStatusLabel(
@@ -21,69 +25,83 @@ function AttendanceSidebar({
     hasCheckOut,
   );
 
-  const statusClassName = getAttendanceStatusClassName(
-    record?.status,
-    hasRecord,
-    hasCheckOut,
-  );
-
-  const canCheckIn = !hasRecord;
-  const canCheckOut = hasRecord && !hasCheckOut;
-
   return (
     <aside className="attendance-sidebar">
-      <div className="attendance-side-section">
-        <div className="attendance-side-section__header">
-          <h3>오늘 상태</h3>
-          <span>실시간</span>
-        </div>
-
-        <div className={`attendance-state-card ${statusClassName}`}>
-          <div className="attendance-state-card__icon">
-            <FiActivity />
-          </div>
-          <div className="attendance-state-card__content">
-            <strong>{statusLabel}</strong>
-            <p>
-              {!hasRecord
-                ? "아직 오늘 출근 기록이 없습니다."
-                : hasCheckOut
-                  ? "오늘 근무가 정상적으로 종료되었습니다."
-                  : "현재 근무가 진행 중입니다."}
-            </p>
+      <section className="attendance-panel-card">
+        <div className="attendance-panel-card__header">
+          <div>
+            <h2>오늘 근무</h2>
+            <p>출근, 퇴근, 조퇴를 처리할 수 있습니다.</p>
           </div>
         </div>
-      </div>
 
-      <AttendanceActionCard
-        canCheckIn={canCheckIn}
-        canCheckOut={canCheckOut}
-        onCheckIn={onCheckIn}
-        onCheckOut={onCheckOut}
-        actionLoading={actionLoading}
-      />
-
-      <div className="attendance-side-section">
-        <div className="attendance-side-section__header">
-          <h3>안내</h3>
-          <span>근태 정책</span>
+        <div className="attendance-sidebar-status">
+          <span>현재 상태</span>
+          <strong>{statusLabel}</strong>
         </div>
 
-        <ul className="attendance-policy-list">
-          <li>
-            <FiCheckCircle />
-            <span>출근 시 오늘 날짜 기준 근태 기록이 생성됩니다.</span>
-          </li>
-          <li>
-            <FiCheckCircle />
-            <span>퇴근 시 총 근무 시간이 자동 계산됩니다.</span>
-          </li>
-          <li>
-            <FiInfo />
-            <span>09:00 이후 출근 시 지각 상태로 표시됩니다.</span>
-          </li>
-        </ul>
-      </div>
+        <div className="attendance-sidebar-list">
+          <div className="attendance-sidebar-list__item">
+            <span>근태 유형</span>
+            <strong>{getAttendanceTypeLabel(record?.attendanceType)}</strong>
+          </div>
+        </div>
+
+        <div className="attendance-sidebar-actions">
+          <button
+            type="button"
+            className="attendance-button attendance-button--primary"
+            onClick={onCheckIn}
+            disabled={actionLoading || !canCheckIn}
+          >
+            {canCheckIn ? "출근하기" : "출근 완료"}
+          </button>
+
+          <button
+            type="button"
+            className="attendance-button attendance-button--secondary"
+            onClick={onCheckOut}
+            disabled={actionLoading || !canCheckOut}
+          >
+            {canCheckOut ? "퇴근하기" : "퇴근 완료"}
+          </button>
+
+          <button
+            type="button"
+            className="attendance-button attendance-button--danger"
+            onClick={onEarlyLeave}
+            disabled={actionLoading || !canEarlyLeave}
+          >
+            {canEarlyLeave ? "조퇴 처리" : "조퇴 불가"}
+          </button>
+        </div>
+      </section>
+
+      <section className="attendance-panel-card">
+        <div className="attendance-panel-card__header">
+          <div>
+            <h2>오늘 요약</h2>
+            <p>오늘 기록 기준 핵심 정보입니다.</p>
+          </div>
+        </div>
+
+        <div className="attendance-sidebar-list">
+          <div className="attendance-sidebar-list__item">
+            <span>출근 시간</span>
+            <strong>{formatTimeOnly(record?.checkInAt)}</strong>
+          </div>
+
+          <div className="attendance-sidebar-list__item">
+            <span>퇴근 시간</span>
+            <strong>{formatTimeOnly(record?.checkOutAt)}</strong>
+          </div>
+
+          <div className="attendance-sidebar-list__item">
+            <span>근무 시간</span>
+            <strong>{formatWorkMinutes(record?.totalWorkMinutes ?? 0)}</strong>
+          </div>
+        </div>
+      </section>
     </aside>
   );
 }

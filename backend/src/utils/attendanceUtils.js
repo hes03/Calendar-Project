@@ -1,12 +1,13 @@
-export const getKoreaDateString = (date = new Date()) => {
-  const koreaTime = new Date(
-    date.toLocaleString("en-US", { timeZone: "Asia/Seoul" })
-  );
+export const getKoreaNow = () => {
+  const now = new Date();
+  return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+};
 
-  const year = koreaTime.getFullYear();
-  const month = String(koreaTime.getMonth() + 1).padStart(2, "0");
-  const day = String(koreaTime.getDate()).padStart(2, "0");
-
+export const getKoreaDateString = () => {
+  const date = getKoreaNow();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -15,19 +16,19 @@ export const getNowIsoString = () => {
 };
 
 export const calculateWorkMinutes = (checkInAt, checkOutAt) => {
-  const start = new Date(checkInAt).getTime();
-  const end = new Date(checkOutAt).getTime();
+  if (!checkInAt || !checkOutAt) return 0;
 
-  if (Number.isNaN(start) || Number.isNaN(end) || end <= start) {
-    return 0;
-  }
+  const checkInDate = new Date(checkInAt);
+  const checkOutDate = new Date(checkOutAt);
 
-  return Math.floor((end - start) / 1000 / 60);
+  const diffMs = checkOutDate.getTime() - checkInDate.getTime();
+  return Math.max(0, Math.floor(diffMs / (1000 * 60)));
 };
 
 export const getAttendanceStatus = (checkInAt) => {
-  const date = new Date(checkInAt);
+  if (!checkInAt) return "ABSENT";
 
+  const date = new Date(checkInAt);
   const koreaTime = new Date(
     date.toLocaleString("en-US", { timeZone: "Asia/Seoul" })
   );
@@ -35,10 +36,22 @@ export const getAttendanceStatus = (checkInAt) => {
   const hour = koreaTime.getHours();
   const minute = koreaTime.getMinutes();
 
-  // 예시 기준: 09:00 이후 출근이면 지각
-  if (hour > 9 || (hour === 9 && minute > 0)) {
-    return "late";
+  if (hour < 9 || (hour === 9 && minute <= 0)) {
+    return "ON_TIME";
   }
 
-  return "present";
+  return "LATE";
+};
+
+export const getMonthStartDateString = (year, month) => {
+  const monthString = String(month).padStart(2, "0");
+  return `${year}-${monthString}-01`;
+};
+
+export const getNextMonthStartDateString = (year, month) => {
+  const nextMonth = month === 12 ? 1 : month + 1;
+  const nextYear = month === 12 ? year + 1 : year;
+  const nextMonthString = String(nextMonth).padStart(2, "0");
+
+  return `${nextYear}-${nextMonthString}-01`;
 };

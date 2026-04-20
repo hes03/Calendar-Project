@@ -1,64 +1,66 @@
-import { FiClock, FiLogIn, FiLogOut, FiFileText } from "react-icons/fi";
 import {
-  formatDateTime,
-  formatMinutesToHours,
-  formatTime,
+  formatTimeOnly,
+  formatWorkMinutes,
+  getAttendanceStatusLabel,
+  getAttendanceTypeLabel,
 } from "../../utils/attendanceUtils";
 
 function AttendanceTodayCard({ record }) {
+  const hasRecord = !!record;
+  const hasCheckOut = !!record?.checkOutAt;
+
+  const statusLabel = getAttendanceStatusLabel(
+    record?.status,
+    hasRecord,
+    hasCheckOut,
+  );
+
   return (
     <section className="attendance-panel-card">
       <div className="attendance-panel-card__header">
         <div>
-          <h2>오늘 근무 상세</h2>
-          <p>출근, 퇴근, 누적 근무 시간을 확인할 수 있습니다.</p>
+          <h2>오늘 상세 기록</h2>
+          <p>오늘의 출퇴근 기록과 상태를 확인할 수 있습니다.</p>
         </div>
       </div>
 
-      <div className="attendance-today-grid">
-        <div className="attendance-info-card">
-          <span className="attendance-info-card__label">
-            <FiLogIn />
-            출근 시간
-          </span>
-          <strong>{formatTime(record?.checkInAt)}</strong>
-          <p>
-            {record?.checkInAt
-              ? formatDateTime(record.checkInAt)
-              : "아직 출근 전입니다."}
-          </p>
+      {!hasRecord ? (
+        <div className="attendance-empty-card">
+          오늘 등록된 근태 기록이 없습니다.
         </div>
+      ) : (
+        <div className="attendance-detail-grid">
+          <div className="attendance-detail-item">
+            <span>출근 시간</span>
+            <strong>{formatTimeOnly(record?.checkInAt)}</strong>
+          </div>
 
-        <div className="attendance-info-card">
-          <span className="attendance-info-card__label">
-            <FiLogOut />
-            퇴근 시간
-          </span>
-          <strong>{formatTime(record?.checkOutAt)}</strong>
-          <p>
-            {record?.checkOutAt
-              ? formatDateTime(record.checkOutAt)
-              : "퇴근 기록이 없습니다."}
-          </p>
-        </div>
+          <div className="attendance-detail-item">
+            <span>퇴근 시간</span>
+            <strong>{formatTimeOnly(record?.checkOutAt)}</strong>
+          </div>
 
-        <div className="attendance-info-card">
-          <span className="attendance-info-card__label">
-            <FiClock />총 근무 시간
-          </span>
-          <strong>{formatMinutesToHours(record?.totalWorkMinutes)}</strong>
-          <p>퇴근 시 자동 계산됩니다.</p>
-        </div>
+          <div className="attendance-detail-item">
+            <span>상태</span>
+            <strong>{statusLabel}</strong>
+          </div>
 
-        <div className="attendance-info-card">
-          <span className="attendance-info-card__label">
-            <FiFileText />
-            비고
-          </span>
-          <strong>{record?.status || "-"}</strong>
-          <p>{record?.note || "등록된 비고가 없습니다."}</p>
+          <div className="attendance-detail-item">
+            <span>근태 유형</span>
+            <strong>{getAttendanceTypeLabel(record?.attendanceType)}</strong>
+          </div>
+
+          <div className="attendance-detail-item">
+            <span>총 근무 시간</span>
+            <strong>{formatWorkMinutes(record?.totalWorkMinutes ?? 0)}</strong>
+          </div>
+
+          <div className="attendance-detail-item attendance-detail-item--full">
+            <span>메모</span>
+            <strong>{record?.note?.trim() ? record.note : "-"}</strong>
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }
