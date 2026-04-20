@@ -1,73 +1,106 @@
-import React, { useState } from 'react'
-import Header from '../include/Header'
-import Footer from '../include/Footer'
-import { Link, useNavigate } from 'react-router'
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { login } from "../../service/authApi/authService";
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const navigate = useNavigate();
-  const [tempUser, setTempUser] = useState({
-    email: 'kiwi@hot.com',
-    password:'123'
-  })
-  const onLogin = async() => {
-    console.log('onLogin');
-    try {
-      navigate("/")
-    } catch (error) {
-      console.error("로그인 에러",error)
-    }
-  }
-  const googleLogin = async() => {
-    try {
-      
-      navigate("/")
-    } catch (error) {
-      console.error("로그인 실패", error)
-    }
-  }
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
   const changeUser = (e) => {
-    console.log('changeUser',e.target.value);
-    const id = e.currentTarget.id 
-    const value = e.target.value 
-    console.log(id,value);
-    setTempUser({...tempUser, [id]: value})    
-  }
+    const { id, value } = e.target;
+    setForm((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const onLogin = async () => {
+    try {
+      await login(form);
+      toast.success("로그인 성공");
+      navigate("/");
+    } catch (error) {
+      console.error("로그인 에러", error);
+      toast.error(error.message || "로그인 실패");
+    }
+  };
+
   return (
-    <>
-        <div className="row my-5 justify-content-center">
-          <div className="col-8 col-md-6 col-lg-4">
-            <h3 className="text-center mb-5">로그인</h3>
-            <form id="frm" method="post">
-            <div className="input-group my-2">
-              <div className="input-group-text">이 메 일</div>
-              <input className="form-control" id="email" value="kiwi@hot.com" onChange={(e)=>changeUser(e)}/>
-            </div>
-            <div className="input-group">
-              <div className="input-group-text">비밀번호</div>
-              <input onChange={(e)=>changeUser(e)}
-              className="form-control"
-              id="password"
-              type="password"
-              value="123"
-              />
-            </div>
-            </form>
-            <div className="my-3">
-            <button onClick={onLogin} type="button" className="btn btn-success w-100">
-              로그인
-            </button>
-            </div>
-            <div className="my-3">
-            <button onClick={googleLogin} type="button" className="btn btn-primary w-100">Google</button>
-            </div>
-            <div className="text-end mt-3">
-              <Link to="/join">회원가입</Link>
+    <main className="auth-page">
+      <div className="auth-shell">
+        <section className="auth-hero">
+          <div>
+            <h1 className="auth-hero-title">
+              오늘의 일정,
+              <br />더 보기 쉽게.
+            </h1>
+            <p className="auth-hero-desc">
+              로그인하고 대시보드, 캘린더, 근태 관리를 한 곳에서 확인해보세요.
+            </p>
+
+            <div className="auth-hero-points">
+              <div className="auth-point">
+                <strong>대시보드 한눈에 보기</strong>
+                <span>오늘 일정과 다가오는 일정을 빠르게 확인</span>
+              </div>
+              <div className="auth-point">
+                <strong>간편한 캘린더 관리</strong>
+                <span>생성, 수정, 삭제를 직관적으로 처리</span>
+              </div>
+              <div className="auth-point">
+                <strong>개인화된 일정 관리</strong>
+                <span>로그인한 사용자 기준으로 안전하게 분리</span>
+              </div>
             </div>
           </div>
-        </div>      
-      <Footer />
-    </>
-  )
-}
+        </section>
 
-export default LoginPage
+        <section className="auth-card">
+          <h2 className="auth-card-title">로그인</h2>
+          <p className="auth-card-desc">
+            이메일과 비밀번호를 입력해 서비스를 시작하세요.
+          </p>
+
+          <div className="auth-form-group">
+            <label className="auth-form-label">이메일</label>
+            <input
+              className="form-control custom-input"
+              id="email"
+              value={form.email}
+              onChange={changeUser}
+              placeholder="email@example.com"
+            />
+          </div>
+
+          <div className="auth-form-group">
+            <label className="auth-form-label">비밀번호</label>
+            <input
+              className="form-control custom-input"
+              id="password"
+              type="password"
+              value={form.password}
+              onChange={changeUser}
+              placeholder="비밀번호를 입력하세요"
+            />
+          </div>
+
+          <button
+            onClick={onLogin}
+            type="button"
+            className="btn custom-btn-primary auth-submit"
+          >
+            로그인
+          </button>
+
+          <div className="auth-link-row">
+            계정이 없으신가요? <Link to="/join">회원가입</Link>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+};
+
+export default LoginPage;

@@ -1,11 +1,22 @@
 import axios from "axios";
+import { getAccessToken } from "../authApi/authService";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000/schedules",
+  baseURL: "http://localhost:3000/api/schedules",
   headers: {
     "Content-Type": "application/json",
   },
   timeout: 5000,
+});
+
+api.interceptors.request.use(async (config) => {
+  const token = await getAccessToken();
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
 });
 
 // 공통 에러 처리
@@ -24,33 +35,28 @@ api.interceptors.response.use(
   }
 );
 
-// 일정 생성
 export const createSchedule = async (schedule) => {
   const res = await api.post("/", schedule);
   return res.data;
 };
 
-// 일정 전체 조회
 export const getSchedules = async () => {
   const res = await api.get("/");
   return res.data;
 };
 
-// 일정 단건 조회
 export const getScheduleById = async (id) => {
   if (!id) throw new Error("조회할 일정 ID가 없습니다.");
   const res = await api.get(`/${id}`);
   return res.data;
 };
 
-// 일정 수정
 export const updateSchedule = async (id, data) => {
   if (!id) throw new Error("수정할 일정 ID가 없습니다.");
   const res = await api.put(`/${id}`, data);
   return res.data;
 };
 
-// 일정 삭제
 export const deleteSchedule = async (id) => {
   if (!id) throw new Error("삭제할 일정 ID가 없습니다.");
   const res = await api.delete(`/${id}`);

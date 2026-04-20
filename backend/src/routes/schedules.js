@@ -1,19 +1,28 @@
 import express from "express";
 import { db } from "../config/firebaseAdmin.js";
+import { verifyFirebaseToken } from "../middlewares/authMiddleware.js";
+import {
+  validateCreateSchedule,
+  validateUpdateSchedule,
+} from "../middlewares/validateScheduleMiddleware.js";
 
 const router = express.Router();
 const COLLECTION = "schedules";
 
+router.use(verifyFirebaseToken);
+
 /**
  * 전체 일정 조회
  * GET /api/schedules
- * (추후 userId, date 쿼리 확장 가능)
  */
 router.get("/", async (req, res) => {
   try {
-    const snapshot = await db.collection(COLLECTION).get();
+    const snapshot = await db
+      .collection(COLLECTION)
+      .where("userId", "==", req.user.uid)
+      .get();
 
-    const schedules = snapshot.docs.map(doc => ({
+    const schedules = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
@@ -33,10 +42,6 @@ router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ message: "ID가 필요합니다." });
-    }
-
     const docRef = db.collection(COLLECTION).doc(id);
     const docSnap = await docRef.get();
 
@@ -44,9 +49,15 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "일정 없음" });
     }
 
+    const data = docSnap.data();
+
+    if (data.userId !== req.user.uid) {
+      return res.status(403).json({ message: "접근 권한이 없습니다." });
+    }
+
     res.json({
       id: docSnap.id,
-      ...docSnap.data(),
+      ...data,
     });
   } catch (error) {
     console.error(error);
@@ -58,42 +69,27 @@ router.get("/:id", async (req, res) => {
  * 일정 생성
  * POST /api/schedules
  */
-router.post("/", async (req, res) => {
+router.post("/", validateCreateSchedule, async (req, res) => {
   try {
-    const {
-      title,
-      start,
-      end,
-      memo = "",
-    } = req.body || {};
+    const { title, start, end, memo, color } = req.body;
+    const now = new Date().toISOString();
 
-    if (!title || !start || !end) {
-      return res.status(400).json({
-        message: "title, start, end는 필수입니다.",
-      });
-    }
-
-    if (new Date(end) <= new Date(start)) {
-      return res.status(400).json({
-        message: "종료 시간은 시작 시간 이후여야 합니다.",
-      });
-    }
-
-    const docRef = await db.collection(COLLECTION).add({
+    const newSchedule = {
       title,
       start,
       end,
       memo,
-      createdAt: new Date(),
-      updatedAt: null,
-    });
+      color,
+      userId: req.user.uid,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    const docRef = await db.collection(COLLECTION).add(newSchedule);
 
     res.status(201).json({
       id: docRef.id,
-      title,
-      start,
-      end,
-      memo,
+      ...newSchedule,
     });
   } catch (error) {
     console.error(error);
@@ -105,20 +101,9 @@ router.post("/", async (req, res) => {
  * 일정 수정
  * PUT /api/schedules/:id
  */
-router.put("/:id", async (req, res) => {
+router.put("/:id", validateUpdateSchedule, async (req, res) => {
   try {
     const { id } = req.params;
-    const { start, end } = req.body || {};
-
-    if (!id) {
-      return res.status(400).json({ message: "ID가 필요합니다." });
-    }
-
-    if (start && end && new Date(end) <= new Date(start)) {
-      return res.status(400).json({
-        message: "종료 시간은 시작 시간 이후여야 합니다.",
-      });
-    }
 
     const docRef = db.collection(COLLECTION).doc(id);
     const docSnap = await docRef.get();
@@ -127,10 +112,34 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "일정 없음" });
     }
 
-    await docRef.update({
+    const oldData = docSnap.data();
+
+    if (oldData.userId !== req.user.uid) {
+      return res.status(403).json({ message: "수정 권한이 없습니다." });
+    }
+
+    const nextStart = req.body.start ?? oldData.start;
+    const nextEnd = req.body.end ?? oldData.end;
+
+    if (new Date(nextEnd) <= new Date(nextStart)) {
+      return res.status(400).json({
+        message: "종료 시간은 시작 시간 이후여야 합니다.",
+      });
+    }
+
+    const updateData = {
       ...req.body,
-      updatedAt: new Date(),
-    });
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (updateData.title !== undefined) {
+      updateData.title = updateData.title.trim();
+    }
+
+    delete updateData.userId;
+    delete updateData.createdAt;
+
+    await docRef.update(updateData);
 
     const updatedDoc = await docRef.get();
 
@@ -152,15 +161,17 @@ router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ message: "ID가 필요합니다." });
-    }
-
     const docRef = db.collection(COLLECTION).doc(id);
     const docSnap = await docRef.get();
 
     if (!docSnap.exists) {
       return res.status(404).json({ message: "일정 없음" });
+    }
+
+    const data = docSnap.data();
+
+    if (data.userId !== req.user.uid) {
+      return res.status(403).json({ message: "삭제 권한이 없습니다." });
     }
 
     await docRef.delete();

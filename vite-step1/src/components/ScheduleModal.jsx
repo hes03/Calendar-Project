@@ -11,7 +11,6 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
     color: "#3b82f6",
   });
 
-  // 🔥 삭제 대상 id를 따로 보관
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -45,7 +44,9 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
   };
 
   const handleSubmit = async () => {
+    if (!form.title.trim()) return;
     if (new Date(form.end) <= new Date(form.start)) return;
+
     try {
       await onSave(form);
       onClose();
@@ -57,17 +58,16 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
   const isInvalidRange =
     form.start && form.end && new Date(form.end) <= new Date(form.start);
 
-  // 🧨 삭제 버튼 클릭 (id 저장만 함)
   const handleDeleteClick = () => {
     if (!schedule?.id) return;
     setDeleteTargetId(schedule.id);
     setShowDeleteConfirm(true);
-    onClose(); // 수정 모달 닫기
+    onClose();
   };
 
-  // ✅ 실제 삭제 실행
   const handleDeleteConfirm = async () => {
     if (!deleteTargetId) return;
+
     try {
       await onDelete(deleteTargetId);
       setShowDeleteConfirm(false);
@@ -79,27 +79,30 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
 
   return (
     <>
-      <Modal show={show} onHide={onClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {mode === "create" ? "일정 등록" : "일정 수정"}
+      <Modal show={show} onHide={onClose} centered>
+        <Modal.Header closeButton className="schedule-modal-header">
+          <Modal.Title className="schedule-modal-title">
+            {mode === "create" ? "새 일정 등록" : "일정 수정"}
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>
+        <Modal.Body className="schedule-modal-body">
           <Form>
-            <Form.Group className="mb-2">
-              <Form.Label>제목</Form.Label>
+            <Form.Group className="mb-3">
+              <Form.Label className="schedule-form-label">제목</Form.Label>
               <Form.Control
+                className="schedule-form-input"
                 name="title"
                 value={form.title}
                 onChange={handleChange}
+                placeholder="일정 제목을 입력하세요"
               />
             </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>시작</Form.Label>
+            <Form.Group className="mb-3">
+              <Form.Label className="schedule-form-label">시작</Form.Label>
               <Form.Control
+                className="schedule-form-input"
                 type="datetime-local"
                 name="start"
                 value={form.start}
@@ -107,9 +110,10 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
               />
             </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>종료</Form.Label>
+            <Form.Group className="mb-3">
+              <Form.Label className="schedule-form-label">종료</Form.Label>
               <Form.Control
+                className="schedule-form-input"
                 type="datetime-local"
                 name="end"
                 value={form.end}
@@ -118,65 +122,97 @@ const ScheduleModal = ({ show, mode, schedule, onSave, onDelete, onClose }) => {
                 isInvalid={isInvalidRange}
               />
               <Form.Control.Feedback type="invalid">
-                종료 날짜는 시작 이후여야 합니다.
+                종료 시간은 시작 시간 이후여야 합니다.
               </Form.Control.Feedback>
             </Form.Group>
 
-            <Form.Group className="mb-2">
-              <Form.Label>메모</Form.Label>
+            <Form.Group className="mb-3">
+              <Form.Label className="schedule-form-label">메모</Form.Label>
               <Form.Control
+                className="schedule-form-textarea"
                 as="textarea"
+                rows={4}
                 name="memo"
                 value={form.memo}
                 onChange={handleChange}
+                placeholder="메모를 입력하세요"
               />
             </Form.Group>
 
             <Form.Group>
-              <Form.Label>색상</Form.Label>
-              <Form.Control
-                type="color"
-                name="color"
-                value={form.color}
-                onChange={handleChange}
-              />
+              <Form.Label className="schedule-form-label">색상</Form.Label>
+              <div className="schedule-color-row">
+                <Form.Control
+                  className="schedule-color-input"
+                  type="color"
+                  name="color"
+                  value={form.color}
+                  onChange={handleChange}
+                />
+                <span className="schedule-color-code">{form.color}</span>
+              </div>
             </Form.Group>
           </Form>
         </Modal.Body>
 
-        <Modal.Footer>
+        <Modal.Footer className="schedule-modal-footer">
           {mode === "edit" && (
-            <Button variant="danger" onClick={handleDeleteClick}>
+            <Button
+              variant="danger"
+              className="schedule-btn-danger"
+              onClick={handleDeleteClick}
+            >
               삭제
             </Button>
           )}
-          <Button variant="primary" onClick={handleSubmit}>
-            저장
-          </Button>
-          <Button variant="secondary" onClick={onClose}>
+
+          <Button
+            variant="secondary"
+            className="schedule-btn-secondary"
+            onClick={onClose}
+          >
             취소
+          </Button>
+
+          <Button
+            variant="primary"
+            className="schedule-btn-primary"
+            onClick={handleSubmit}
+          >
+            저장
           </Button>
         </Modal.Footer>
       </Modal>
 
-      {/* 삭제 확인 모달 */}
       <Modal
         show={showDeleteConfirm}
         onHide={() => setShowDeleteConfirm(false)}
         centered
       >
-        <Modal.Header closeButton>
-          <Modal.Title>삭제 확인</Modal.Title>
+        <Modal.Header closeButton className="schedule-modal-header">
+          <Modal.Title className="schedule-modal-title">삭제 확인</Modal.Title>
         </Modal.Header>
-        <Modal.Body>정말 삭제하시겠습니까?</Modal.Body>
-        <Modal.Footer>
+
+        <Modal.Body className="schedule-modal-body">
+          <div className="schedule-delete-box">
+            <h5>정말 삭제하시겠습니까?</h5>
+            <p>삭제한 일정은 다시 복구할 수 없습니다.</p>
+          </div>
+        </Modal.Body>
+
+        <Modal.Footer className="schedule-modal-footer">
           <Button
             variant="secondary"
+            className="schedule-btn-secondary"
             onClick={() => setShowDeleteConfirm(false)}
           >
             취소
           </Button>
-          <Button variant="danger" onClick={handleDeleteConfirm}>
+          <Button
+            variant="danger"
+            className="schedule-btn-danger"
+            onClick={handleDeleteConfirm}
+          >
             삭제
           </Button>
         </Modal.Footer>
