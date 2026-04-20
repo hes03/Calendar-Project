@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Container from "react-bootstrap/Container";
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
@@ -9,45 +10,73 @@ const Header = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [expanded, setExpanded] = useState(false);
 
   const handleLogout = async () => {
     try {
       await logout();
+      setExpanded(false);
       navigate("/login");
     } catch (error) {
       console.error("로그아웃 실패", error);
     }
   };
 
+  const handleNavClick = () => {
+    setExpanded(false);
+  };
+
   const navClass = (path) =>
     `app-nav-link ${location.pathname === path ? "active" : ""}`;
 
   return (
-    <Navbar expand="lg" className="app-navbar">
+    <Navbar
+      expand="lg"
+      expanded={expanded}
+      onToggle={(nextExpanded) => setExpanded(nextExpanded)}
+      className="app-navbar"
+    >
       <Container>
-        <Navbar.Brand as={Link} to="/" className="app-brand">
+        <Navbar.Brand
+          as={Link}
+          to="/"
+          className="app-brand"
+          onClick={handleNavClick}
+        >
           <span className="app-brand-badge">📅</span>
           Planit
         </Navbar.Brand>
 
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Toggle
+          aria-controls="basic-navbar-nav"
+          onClick={() => setExpanded(!expanded)}
+        />
 
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/" className={navClass("/")}>
+            <Nav.Link
+              as={Link}
+              to="/"
+              className={navClass("/")}
+              onClick={handleNavClick}
+            >
               Dashboard
             </Nav.Link>
+
             <Nav.Link
               as={Link}
               to="/schedule"
               className={navClass("/schedule")}
+              onClick={handleNavClick}
             >
               Schedule
             </Nav.Link>
+
             <Nav.Link
               as={Link}
               to="/attendance"
               className={navClass("/attendance")}
+              onClick={handleNavClick}
             >
               Attend
             </Nav.Link>
@@ -66,7 +95,12 @@ const Header = () => {
                 </button>
               </>
             ) : (
-              <Nav.Link as={Link} to="/login" className="app-login-link">
+              <Nav.Link
+                as={Link}
+                to="/login"
+                className="app-login-link"
+                onClick={handleNavClick}
+              >
                 로그인
               </Nav.Link>
             )}
